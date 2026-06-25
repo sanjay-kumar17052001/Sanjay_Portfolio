@@ -13,6 +13,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
 
 <style>
     /* ---------- Design tokens and reset ---------- */
@@ -80,38 +81,426 @@ cursor:auto;
         linear-gradient(rgba(10,10,10,.78), rgba(10,10,10,.95));
     }
 
-    /* ---------- Loader ---------- */
+    /* =============================================
+       LOADER — fills viewport, no scroll
+       ============================================= */
+
     .loader {
       position: fixed;
       inset: 0;
       z-index: 1000;
-      display: grid;
-      place-items: center;
-      background: #070707;
-      transition: opacity .7s ease, visibility .7s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      overflow: hidden;
+      transition: opacity .8s ease, visibility .8s ease;
     }
-    .loader.is-hidden { opacity: 0; visibility: hidden; }
-    .loader-inner { width: min(360px, 78vw); text-align: center; }
-    .loader-mark {
-      font-family: "Syne", sans-serif;
-      font-size: clamp(3.5rem, 11vw, 6rem);
+    .loader.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    /* Gold arc streaks background */
+    .loader-arc {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Ambient glow field */
+    .loader-particles {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      background:
+        radial-gradient(circle at 18% 55%, rgba(250,204,21,.13) 0%, transparent 38%),
+        radial-gradient(circle at 82% 45%, rgba(250,204,21,.11) 0%, transparent 38%),
+        radial-gradient(circle at 50% 50%, rgba(250,204,21,.05) 0%, transparent 60%);
+    }
+
+    /* Main content wrapper — locked to viewport, no scroll */
+    .loader-content {
+      position: relative;
+      z-index: 5;
+      width: 100%;
+      max-width: 1100px;
+      height: 100vh;
+      max-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-evenly;
+      padding: 3vh 32px;
+      overflow: hidden;
+      text-align: center;
+      box-sizing: border-box;
+    }
+
+    /* Top tagline */
+    .top-text {
+      font-size: clamp(11px, 1.4vw, 16px);
+      letter-spacing: 10px;
+      color: #fff;
+      text-transform: uppercase;
+      font-weight: 400;
+      flex-shrink: 0;
+    }
+    .top-text span { color: #facc15; }
+
+    /* Logo ring */
+    .logo-ring {
+      position: relative;
+      width: clamp(180px, 22vw, 280px);
+      height: clamp(180px, 22vw, 280px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .ring1 {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 3px solid #facc15;
+      box-shadow:
+        0 0 12px 2px #facc15,
+        0 0 40px 8px rgba(250,204,21,.55),
+        0 0 90px 18px rgba(250,204,21,.25);
+    }
+
+    .ring-fill {
+      position: absolute;
+      width: 90%;
+      height: 90%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 50% 50%, #111 60%, #000 100%);
+    }
+
+    .ring-ticks {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+
+    .logo-center {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1;
+    }
+    .logo-center .sk-letters {
+      font-size: clamp(60px, 8vw, 110px);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -4px;
+    }
+    .logo-center .sk-s { color: #ffffff; }
+    .logo-center .sk-k { color: #facc15; }
+    .logo-center .sk-script {
+      font-family: "Dancing Script", "Brush Script MT", cursive;
+      color: #facc15;
+      font-size: clamp(11px, 1.4vw, 18px);
+      font-weight: 700;
+      margin-top: 2px;
+      letter-spacing: 1px;
+    }
+
+    /* Name */
+    .loader-name {
+      font-size: clamp(22px, 3.8vw, 60px);
       font-weight: 800;
-      letter-spacing: -0.08em;
-      color: var(--yellow);
-      text-shadow: 0 0 36px rgba(250,204,21,.28);
-      animation: loaderPulse 1.2s ease-in-out infinite alternate;
+      letter-spacing: 12px;
+      color: #fff;
+      text-transform: uppercase;
+      flex-shrink: 0;
     }
-    .loader-label { margin: 14px 0 22px; color: #777; font-size: .72rem; letter-spacing: .28em; text-transform: uppercase; }
-    .loader-track { height: 3px; overflow: hidden; border-radius: 10px; background: #222; }
-    .loader-bar {
+    .loader-name span { color: #facc15; }
+
+    /* Role */
+    .loader-role {
+      font-size: clamp(10px, 1.1vw, 15px);
+      letter-spacing: 4px;
+      color: #ccc;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    /* Percent + bar group */
+    .loader-progress-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    #loaderPercent {
+      font-size: clamp(24px, 3.2vw, 46px);
+      font-weight: 800;
+      color: #facc15;
+      line-height: 1;
+    }
+
+    .premium-track {
+      width: min(560px, 82vw);
+      height: 7px;
+      background: rgba(255,255,255,.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .premium-bar {
+      height: 100%;
+      width: 0%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #b8860b, #facc15, #ffe680);
+      box-shadow: 0 0 10px #facc15, 0 0 24px rgba(250,204,21,.5);
+      transition: width .04s linear;
+    }
+
+    .loading-text {
+      font-size: clamp(9px, 1vw, 13px);
+      letter-spacing: 7px;
+      color: #888;
+      text-transform: uppercase;
+    }
+
+    /* Stat cards */
+    .loader-stats {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      gap: clamp(10px, 1.4vw, 20px);
+      flex-wrap: nowrap;
+      width: 100%;
+      flex-shrink: 0;
+    }
+
+    .loader-stat-card {
+      flex: 1;
+      max-width: 220px;
+      padding: clamp(14px, 1.8vw, 24px) clamp(10px, 1.2vw, 18px);
+      border: 1px solid rgba(250,204,21,.28);
+      border-radius: 16px;
+      background: rgba(10,10,10,.6);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform .3s, box-shadow .3s;
+    }
+    .loader-stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 0 30px rgba(250,204,21,.15);
+    }
+
+    .loader-stat-card .stat-icon {
+      width: clamp(32px, 3.5vw, 48px);
+      height: clamp(32px, 3.5vw, 48px);
+      margin-bottom: clamp(6px, .8vw, 12px);
+    }
+    .loader-stat-card .stat-icon svg {
       width: 100%;
       height: 100%;
-      transform: translateX(-100%);
-      background: linear-gradient(90deg, #9a7800, var(--yellow), #fff2a6);
-      animation: load 1.8s cubic-bezier(.65,0,.35,1) forwards;
+      stroke: #facc15;
+      fill: none;
+      stroke-width: 1.6;
     }
-    @keyframes load { to { transform: translateX(0); } }
-    @keyframes loaderPulse { to { transform: scale(1.035); filter: brightness(1.15); } }
+
+    .loader-stat-card .stat-num {
+      font-size: clamp(26px, 3.2vw, 48px);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+    .loader-stat-card .stat-label {
+      font-size: clamp(9px, .9vw, 13px);
+      letter-spacing: 2px;
+      color: #facc15;
+      margin-top: clamp(4px, .5vw, 8px);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .loader-stat-card .stat-sub {
+      font-size: clamp(9px, .85vw, 12px);
+      color: #999;
+      margin-top: clamp(3px, .4vw, 6px);
+    }
+
+    /* Bottom tagline */
+    .bottom-line {
+      font-size: clamp(10px, 1.1vw, 14px);
+      letter-spacing: 7px;
+      color: #ccc;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .bottom-line span { color: #facc15; }
+
+    /* Cursive signature */
+    .loader-signature {
+      font-family: "Dancing Script", "Brush Script MT", cursive;
+      font-size: clamp(18px, 2.2vw, 32px);
+      color: #facc15;
+      letter-spacing: 2px;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 768px) {
+      .loader-stats { gap: 8px; flex-wrap: wrap; }
+      .loader-stat-card { flex: none; width: calc(50% - 8px); max-width: none; }
+      .loader-name { letter-spacing: 5px; }
+      .top-text { letter-spacing: 5px; }
+    }
+
+    @keyframes loaderSpin { 100% { transform: rotate(360deg); } }
+
+    /* =============================================
+       SK LOGO — PREMIUM ANIMATIONS
+       ============================================= */
+
+    /* ── Outer ring: slow spin + pulse glow ── */
+    .ring1 {
+      animation: loaderSpin 25s linear infinite, ringGlowPulse 3s ease-in-out infinite;
+    }
+    @keyframes ringGlowPulse {
+      0%, 100% {
+        box-shadow:
+          0 0 12px 2px #facc15,
+          0 0 40px 8px rgba(250,204,21,.55),
+          0 0 90px 18px rgba(250,204,21,.25);
+      }
+      50% {
+        box-shadow:
+          0 0 20px 6px #facc15,
+          0 0 65px 18px rgba(250,204,21,.8),
+          0 0 130px 35px rgba(250,204,21,.35),
+          0 0 0 2px rgba(250,204,21,.15);
+      }
+    }
+
+    /* ── Orbit arc 1 — thin gold arc spinning fast ── */
+    .orbit-arc-1 {
+      position: absolute;
+      inset: -8%;
+      border-radius: 50%;
+      border: 1.5px solid transparent;
+      border-top-color: rgba(250,204,21,.7);
+      border-right-color: rgba(250,204,21,.2);
+      animation: loaderSpin 4s linear infinite;
+      filter: drop-shadow(0 0 4px rgba(250,204,21,.6));
+    }
+
+    /* ── Orbit arc 2 — counter-spin, offset ── */
+    .orbit-arc-2 {
+      position: absolute;
+      inset: -14%;
+      border-radius: 50%;
+      border: 1px solid transparent;
+      border-bottom-color: rgba(250,204,21,.5);
+      border-left-color: rgba(250,204,21,.15);
+      animation: loaderSpinReverse 7s linear infinite;
+      filter: drop-shadow(0 0 3px rgba(250,204,21,.4));
+    }
+    @keyframes loaderSpinReverse { 100% { transform: rotate(-360deg); } }
+
+    /* ── SK letters: staggered slide-in on load ── */
+    .sk-s {
+      display: inline-block;
+      color: #ffffff;
+      animation: skSlideInLeft .9s cubic-bezier(.2,.8,.2,1) both;
+    }
+    .sk-k {
+      display: inline-block;
+      color: #facc15;
+      animation: skSlideInRight .9s cubic-bezier(.2,.8,.2,1) .15s both;
+    }
+    @keyframes skSlideInLeft {
+      from { opacity: 0; transform: translateX(-30px) scale(.8); filter: blur(6px); }
+      to   { opacity: 1; transform: translateX(0)     scale(1);  filter: blur(0);  }
+    }
+    @keyframes skSlideInRight {
+      from { opacity: 0; transform: translateX(30px)  scale(.8); filter: blur(6px); }
+      to   { opacity: 1; transform: translateX(0)     scale(1);  filter: blur(0);  }
+    }
+
+    /* ── Shimmer sweep across SK — repeating lens flare ── */
+    .sk-shimmer {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      border-radius: 50%;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .sk-shimmer::after {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -75%;
+      width: 50%;
+      height: 200%;
+      background: linear-gradient(
+        105deg,
+        transparent 30%,
+        rgba(255,255,255,.18) 48%,
+        rgba(255,240,150,.35) 52%,
+        rgba(255,255,255,.12) 56%,
+        transparent 70%
+      );
+      animation: shimmerSweep 4s ease-in-out infinite 1.2s;
+    }
+    @keyframes shimmerSweep {
+      0%   { left: -75%; opacity: 0; }
+      10%  { opacity: 1; }
+      55%  { left: 130%; opacity: 1; }
+      60%  { opacity: 0; }
+      100% { left: 130%; opacity: 0; }
+    }
+
+    /* ── Script name: fade-wipe in like handwriting ── */
+    .logo-center .sk-script {
+      animation: scriptReveal 1.2s cubic-bezier(.4,0,.2,1) .7s both;
+      transform-origin: left center;
+    }
+    @keyframes scriptReveal {
+      from {
+        opacity: 0;
+        clip-path: inset(0 100% 0 0);
+        letter-spacing: -2px;
+      }
+      to {
+        opacity: 1;
+        clip-path: inset(0 0% 0 0);
+        letter-spacing: 1px;
+      }
+    }
+
+    /* ── Inner fill: subtle scale breathe ── */
+    .ring-fill {
+      animation: ringBreath 4s ease-in-out infinite;
+    }
+    @keyframes ringBreath {
+      0%, 100% { transform: scale(1);    opacity: 1;   }
+      50%       { transform: scale(.96); opacity: .85; }
+    }
+
+    /* ── Tick ring: slow counter-spin ── */
+    .ring-ticks {
+      animation: loaderSpinReverse 60s linear infinite;
+    }
+
+    /* =============================================
+       END SK ANIMATIONS
+       ============================================= */
 
     /* ---------- Custom cursor ---------- */
     .cursor-dot, .cursor-ring {
@@ -192,7 +581,21 @@ cursor:auto;
     .menu-toggle span { display: block; width: 19px; height: 1px; margin: 5px auto; background: currentColor; transition: .3s; }
 
     /* ---------- Hero ---------- */
-    .hero { min-height: 100vh; display: grid; align-items: center; padding-top: 155px; }
+    .hero{
+min-height:100vh;
+display:grid;
+align-items:center;
+padding-top:155px;
+
+opacity:0;
+transform:translateY(60px) scale(.95);
+transition:all 1.2s ease;
+}
+
+.hero.loaded{
+opacity:1;
+transform:translateY(0) scale(1);
+}
     .hero-grid { display: grid; grid-template-columns: 1.12fr .88fr; gap: 54px; align-items: center; }
     .availability {
       display: inline-flex;
@@ -796,11 +1199,168 @@ z-index:10;
 </head>
 <body onload="window.scrollTo(0,0)">
   <!-- Loading screen -->
-  <div class="loader" id="loader" aria-hidden="true">
-    <div class="loader-inner">
-      <div class="loader-mark">SK</div>
-      <div class="loader-label">Crafting the frame</div>
-      <div class="loader-track"><div class="loader-bar"></div></div>
+  <div class="loader" id="loader">
+
+    <!-- Sweeping gold arc streaks -->
+    <svg class="loader-arc" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <!-- Left arc streak -->
+      <path d="M -60 900 Q 200 500 80 0" stroke="url(#arcLeft)" stroke-width="2.5" fill="none" opacity="0.85"/>
+      <path d="M -20 900 Q 260 480 140 0" stroke="url(#arcLeft)" stroke-width="1" fill="none" opacity="0.4"/>
+      <!-- Right arc streak -->
+      <path d="M 1500 900 Q 1240 500 1360 0" stroke="url(#arcRight)" stroke-width="2.5" fill="none" opacity="0.85"/>
+      <path d="M 1460 900 Q 1180 480 1300 0" stroke="url(#arcRight)" stroke-width="1" fill="none" opacity="0.4"/>
+      <!-- Glow blobs at arc origins -->
+      <ellipse cx="60" cy="820" rx="90" ry="50" fill="rgba(250,180,0,.18)"/>
+      <ellipse cx="1380" cy="820" rx="90" ry="50" fill="rgba(250,180,0,.18)"/>
+      <defs>
+        <linearGradient id="arcLeft" x1="0" y1="1" x2="0" y2="0" gradientUnits="objectBoundingBox">
+          <stop offset="0%" stop-color="#facc15" stop-opacity="1"/>
+          <stop offset="60%" stop-color="#facc15" stop-opacity="0.5"/>
+          <stop offset="100%" stop-color="#facc15" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="arcRight" x1="0" y1="1" x2="0" y2="0" gradientUnits="objectBoundingBox">
+          <stop offset="0%" stop-color="#facc15" stop-opacity="1"/>
+          <stop offset="60%" stop-color="#facc15" stop-opacity="0.5"/>
+          <stop offset="100%" stop-color="#facc15" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <!-- Particle glow field -->
+    <div class="loader-particles"></div>
+
+    <!-- Main content -->
+    <div class="loader-content">
+
+      <!-- Top tagline -->
+      <div class="top-text">CRAFTING <span>VISUAL</span> STORIES</div>
+
+      <!-- Logo ring -->
+      <div class="logo-ring">
+
+        <!-- Outer orbit arcs (fast spin, counter-spin) -->
+        <div class="orbit-arc-1"></div>
+        <div class="orbit-arc-2"></div>
+
+        <!-- Outer glowing ring (slow spin + glow pulse) -->
+        <div class="ring1"></div>
+
+        <!-- Dark fill circle (breathe) -->
+        <div class="ring-fill"></div>
+
+        <!-- Tick marks via SVG (slow counter-spin) -->
+        <svg class="ring-ticks" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0;width:100%;height:100%;z-index:2;">
+          <g transform="translate(150,150)">
+            <script>/* generated below */</script>
+          </g>
+        </svg>
+
+        <!-- Shimmer sweep overlay -->
+        <div class="sk-shimmer"></div>
+
+        <!-- SK letters + script name -->
+        <div class="logo-center">
+          <div class="sk-letters"><span class="sk-s">S</span><span class="sk-k">K</span></div>
+          <div class="sk-script">Sanjay Kumar A</div>
+        </div>
+
+      </div>
+
+      <!-- Name -->
+      <h2 class="loader-name">SANJAY KUMAR <span>A</span></h2>
+
+      <!-- Role -->
+      <div class="loader-role">VIDEO EDITOR &nbsp;•&nbsp; MOTION GRAPHICS DESIGNER &nbsp;•&nbsp; STORYTELLER</div>
+
+      <!-- Percent + bar group -->
+      <div class="loader-progress-group">
+        <div id="loaderPercent">0%</div>
+        <div class="premium-track"><div class="premium-bar" id="loaderBar"></div></div>
+        <div class="loading-text">LOADING EXPERIENCE...</div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="loader-stats">
+
+        <div class="loader-stat-card">
+          <div class="stat-icon">
+            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <!-- Clapperboard -->
+              <rect x="6" y="14" width="36" height="28" rx="3" stroke="#facc15" stroke-width="2" fill="none"/>
+              <line x1="6" y1="22" x2="42" y2="22" stroke="#facc15" stroke-width="2"/>
+              <line x1="6" y1="14" x2="42" y2="14" stroke="#facc15" stroke-width="2"/>
+              <line x1="13" y1="8" x2="10" y2="14" stroke="#facc15" stroke-width="2"/>
+              <line x1="21" y1="8" x2="18" y2="14" stroke="#facc15" stroke-width="2"/>
+              <line x1="29" y1="8" x2="26" y2="14" stroke="#facc15" stroke-width="2"/>
+              <line x1="37" y1="8" x2="34" y2="14" stroke="#facc15" stroke-width="2"/>
+              <polygon points="20,28 32,34 20,40" fill="#facc15"/>
+            </svg>
+          </div>
+          <div class="stat-num">50+</div>
+          <div class="stat-label">SPORTS EDITS</div>
+          <div class="stat-sub">Game. Moment. Emotion.</div>
+        </div>
+
+        <div class="loader-stat-card">
+          <div class="stat-icon">
+            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <!-- Clock -->
+              <circle cx="24" cy="24" r="18" stroke="#facc15" stroke-width="2" fill="none"/>
+              <line x1="24" y1="10" x2="24" y2="12" stroke="#facc15" stroke-width="2"/>
+              <line x1="24" y1="36" x2="24" y2="38" stroke="#facc15" stroke-width="2"/>
+              <line x1="10" y1="24" x2="12" y2="24" stroke="#facc15" stroke-width="2"/>
+              <line x1="36" y1="24" x2="38" y2="24" stroke="#facc15" stroke-width="2"/>
+              <line x1="24" y1="24" x2="24" y2="14" stroke="#facc15" stroke-width="2.2" stroke-linecap="round"/>
+              <line x1="24" y1="24" x2="32" y2="28" stroke="#facc15" stroke-width="2.2" stroke-linecap="round"/>
+              <circle cx="24" cy="24" r="2" fill="#facc15"/>
+            </svg>
+          </div>
+          <div class="stat-num">2+</div>
+          <div class="stat-label">YEARS</div>
+          <div class="stat-sub">Industry Experience</div>
+        </div>
+
+        <div class="loader-stat-card">
+          <div class="stat-icon">
+            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <!-- Film strip -->
+              <rect x="6" y="10" width="36" height="28" rx="2" stroke="#facc15" stroke-width="2" fill="none"/>
+              <rect x="6" y="10" width="7" height="28" stroke="#facc15" stroke-width="1.5" fill="none"/>
+              <rect x="35" y="10" width="7" height="28" stroke="#facc15" stroke-width="1.5" fill="none"/>
+              <line x1="9.5" y1="16" x2="9.5" y2="20" stroke="#facc15" stroke-width="1.5"/>
+              <line x1="9.5" y1="24" x2="9.5" y2="28" stroke="#facc15" stroke-width="1.5"/>
+              <line x1="9.5" y1="32" x2="9.5" y2="36" stroke="#facc15" stroke-width="1.5"/>
+              <line x1="38.5" y1="16" x2="38.5" y2="20" stroke="#facc15" stroke-width="1.5"/>
+              <line x1="38.5" y1="24" x2="38.5" y2="28" stroke="#facc15" stroke-width="1.5"/>
+              <line x1="38.5" y1="32" x2="38.5" y2="36" stroke="#facc15" stroke-width="1.5"/>
+              <polygon points="20,20 30,24 20,28" fill="#facc15"/>
+            </svg>
+          </div>
+          <div class="stat-num">100+</div>
+          <div class="stat-label">VISUAL STORIES</div>
+          <div class="stat-sub">Edited with Purpose</div>
+        </div>
+
+        <div class="loader-stat-card">
+          <div class="stat-icon">
+            <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <!-- Star outline -->
+              <polygon points="24,6 29,18 42,18 32,27 36,40 24,32 12,40 16,27 6,18 19,18" stroke="#facc15" stroke-width="2" fill="none" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="stat-num">100%</div>
+          <div class="stat-label">PASSION</div>
+          <div class="stat-sub">For Every Frame</div>
+        </div>
+
+      </div>
+
+      <!-- Bottom tagline -->
+      <div class="bottom-line">EVERY <span>FRAME</span> &nbsp;•&nbsp; EVERY DETAIL &nbsp;•&nbsp; EVERY STORY</div>
+
+      <!-- Cursive signature -->
+      <div class="loader-signature">Sanju Portfolio Website</div>
+
     </div>
   </div>
 
@@ -938,7 +1498,7 @@ style="cursor:pointer;">
 
 <section id="sports">
 
-<div class="sports-banner-wrapper" onclick="window.location.href='Sports_edits.html'">
+<div class="sports-banner-wrapper" onclick="window.location.href='sports_edits.html'">
 
 <img
 id="sportsBanner"
@@ -1060,7 +1620,48 @@ alt="Sports Banner">
   <script>
     /* ---------- Loader ---------- */
     const loader = document.getElementById("loader");
-    window.addEventListener("load", () => setTimeout(() => loader.classList.add("is-hidden"), 1950));
+    const percent = document.getElementById("loaderPercent");
+    const bar = document.getElementById("loaderBar");
+
+    /* Draw tick marks around the logo ring */
+    (function drawTicks() {
+      const svg = document.querySelector(".ring-ticks");
+      if (!svg) return;
+      const g = svg.querySelector("g");
+      const total = 60;
+      for (let i = 0; i < total; i++) {
+        const angle = (i / total) * 360;
+        const rad = (angle - 90) * Math.PI / 180;
+        const r = 138; // radius in viewBox units (300x300, center 150)
+        const len = i % 5 === 0 ? 10 : 5;
+        const x1 = 150 + r * Math.cos(rad);
+        const y1 = 150 + r * Math.sin(rad);
+        const x2 = 150 + (r - len) * Math.cos(rad);
+        const y2 = 150 + (r - len) * Math.sin(rad);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1); line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2); line.setAttribute("y2", y2);
+        line.setAttribute("stroke", "rgba(250,204,21,0.55)");
+        line.setAttribute("stroke-width", i % 5 === 0 ? "1.8" : "1");
+        g.appendChild(line);
+      }
+    })();
+
+    let count = 0;
+    const loaderInterval = setInterval(() => {
+      count++;
+      percent.textContent = count + "%";
+      if (bar) bar.style.width = count + "%";
+      if (count >= 100) {
+        clearInterval(loaderInterval);
+        setTimeout(() => {
+          loader.classList.add("is-hidden");
+          setTimeout(() => {
+            document.querySelector(".hero").classList.add("loaded");
+          }, 300);
+        }, 500);
+      }
+    }, 20);
 
     /* ---------- Mobile menu ---------- */
     const menuToggle = document.getElementById("menuToggle");
